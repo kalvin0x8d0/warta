@@ -4,5 +4,4 @@
 uploads/
 postgres_data/
 backend/warta
-backend/go.sum
 node_modules/
