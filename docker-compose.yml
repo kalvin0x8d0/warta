@@ -55,6 +55,7 @@ services:
       - uploads_data:/app/uploads:ro
     networks:
       - warta_internal
+      - warta_web
     ports:
       - "${APP_PORT:-50982}:3000"
 
@@ -65,3 +66,4 @@ volumes:
 networks:
   warta_internal:
     internal: true
+  warta_web:
