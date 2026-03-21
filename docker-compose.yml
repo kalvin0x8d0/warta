@@ -66,12 +66,8 @@ services:
       - frontend
     networks:
       - warta_internal
-      - warta_external
-    expose:
-      - "80"
-    labels:
-      # YunoHost reverse proxy picks this up
-      - "yunohost.app=warta"
+    ports:
+      - "50982:80"
 
 volumes:
   postgres_data:
@@ -80,6 +76,3 @@ volumes:
 networks:
   warta_internal:
     internal: true
-  warta_external:
-    name: yunohost_network
-    external: true
