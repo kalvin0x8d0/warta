@@ -923,7 +923,8 @@ async function addComment(postID) {
 
 function toggleLongform(postID) {
   const panel = document.getElementById('longform-' + postID);
-  const btn = panel.previousElementSibling.querySelector('.expand-btn');
+  const card = document.getElementById('post-' + postID);
+  const btn = card.querySelector('.expand-btn');
   if (panel.classList.toggle('open')) {
     btn.textContent = 'Show less ↑';
     loadLongform(postID, panel);

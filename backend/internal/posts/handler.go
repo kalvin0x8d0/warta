@@ -39,20 +39,40 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 		limit = 20
 	}
 
+	// Filtering
+	parentFilter := r.URL.Query().Get("parent")
+	typeFilter := r.URL.Query().Get("type")
+
 	query := `
 		SELECT p.id, p.post_type, p.content, p.title, p.parent_id, p.created_at,
 			u.id as author_id, u.username, u.display_name, u.avatar_path,
 			COUNT(DISTINCT r.id) as reaction_count,
 			COUNT(DISTINCT c.id) as comment_count,
-			EXISTS(SELECT 1 FROM reactions rx WHERE rx.post_id=p.id AND rx.user_id=$1) as user_reacted
+			EXISTS(SELECT 1 FROM reactions rx WHERE rx.post_id=p.id AND rx.user_id=$1) as user_reacted,
+			EXISTS(SELECT 1 FROM posts lf WHERE lf.parent_id=p.id AND lf.post_type='longform' AND lf.is_removed=FALSE) as has_longform
 		FROM posts p
 		JOIN users u ON u.id = p.author_id
 		LEFT JOIN reactions r ON r.post_id = p.id
 		LEFT JOIN comments c ON c.post_id = p.id AND c.is_removed=FALSE
-		WHERE p.is_removed = FALSE AND p.post_type = 'micro'
+		WHERE p.is_removed = FALSE
 	`
 	args := []any{claims.UserID}
 	argN := 2
+
+	if parentFilter != "" {
+		query += ` AND p.parent_id = $` + strconv.Itoa(argN)
+		args = append(args, parentFilter)
+		argN++
+	}
+	if typeFilter != "" {
+		query += ` AND p.post_type = $` + strconv.Itoa(argN)
+		args = append(args, typeFilter)
+		argN++
+	}
+	// Default feed: show top-level posts only (no children)
+	if parentFilter == "" && typeFilter == "" {
+		query += ` AND p.parent_id IS NULL`
+	}
 
 	if before != "" {
 		query += ` AND p.created_at < $` + strconv.Itoa(argN)
@@ -83,6 +103,7 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 		ReactionCount int       `json:"reaction_count"`
 		CommentCount  int       `json:"comment_count"`
 		UserReacted   bool      `json:"user_reacted"`
+		HasLongform   bool      `json:"has_longform"`
 		Media         []any     `json:"media"`
 	}
 
@@ -94,7 +115,7 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 		rows.Scan(
 			&p.ID, &p.PostType, &p.Content, &p.Title, &p.ParentID, &p.CreatedAt,
 			&p.AuthorID, &p.Username, &p.DisplayName, &p.AvatarPath,
-			&p.ReactionCount, &p.CommentCount, &p.UserReacted,
+			&p.ReactionCount, &p.CommentCount, &p.UserReacted, &p.HasLongform,
 		)
 		p.Media = []any{}
 		feed = append(feed, p)
