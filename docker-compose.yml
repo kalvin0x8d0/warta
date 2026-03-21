@@ -67,7 +67,7 @@ services:
     networks:
       - warta_internal
     ports:
-      - "50982:80"
+      - "${APP_PORT:-50982}:80"
 
 volumes:
   postgres_data:
