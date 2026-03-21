@@ -49,25 +49,14 @@ services:
       dockerfile: Dockerfile
     container_name: warta_frontend
     restart: unless-stopped
-    networks:
-      - warta_internal
-    expose:
-      - "3000"
-
-  nginx:
-    image: nginx:alpine
-    container_name: warta_nginx
-    restart: unless-stopped
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - uploads_data:/app/uploads:ro
     depends_on:
       - backend
-      - frontend
+    volumes:
+      - uploads_data:/app/uploads:ro
     networks:
       - warta_internal
     ports:
-      - "${APP_PORT:-50982}:80"
+      - "${APP_PORT:-50982}:3000"
 
 volumes:
   postgres_data:
