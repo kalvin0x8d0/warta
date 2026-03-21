@@ -1,5 +1,6 @@
 .env
-*.env
+.env.*
+!.env.example
 uploads/
 postgres_data/
 backend/warta

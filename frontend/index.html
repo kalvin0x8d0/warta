@@ -817,16 +817,16 @@ async function loadFeed() {
 function renderPost(post) {
   const hasLongform = post.post_type === 'longform' || post.has_longform;
   const mediaTags = (post.media || []).map(m => {
-    if (m.media_type === 'image') return `<img src="${m.url}" alt="" onclick="openMedia('${m.url}', 'image')" style="cursor:pointer">`;
-    if (m.media_type === 'audio') return `<audio controls src="${m.url}"></audio>`;
-    if (m.media_type === 'video') return `<video controls src="${m.url}" style="max-height:300px"></video>`;
+    if (m.media_type === 'image') return `<img src="${esc(m.url)}" alt="" onclick="openMedia('${esc(m.url)}', 'image')" style="cursor:pointer">`;
+    if (m.media_type === 'audio') return `<audio controls src="${esc(m.url)}"></audio>`;
+    if (m.media_type === 'video') return `<video controls src="${esc(m.url)}" style="max-height:300px"></video>`;
     return '';
   }).join('');
 
   return `
   <div class="card" id="post-${post.id}">
     <div class="post-header">
-      <div class="avatar">${post.avatar_path ? `<img src="${post.avatar_path}" alt="">` : '👤'}</div>
+      <div class="avatar">${post.avatar_path ? `<img src="${esc(post.avatar_path)}" alt="">` : '👤'}</div>
       <div class="post-meta">
         <div class="post-author">${esc(post.display_name || post.username)}</div>
         <div class="post-username">@${esc(post.username)} · <span class="post-time">${relTime(post.created_at)}</span></div>
@@ -1659,7 +1659,10 @@ function openMedia(url, type) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cursor = 'zoom-out';
-  overlay.innerHTML = `<img src="${url}" style="max-width:90vw;max-height:90vh;border-radius:var(--radius);object-fit:contain">`;
+  const img = document.createElement('img');
+  img.src = url;
+  img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:var(--radius);object-fit:contain';
+  overlay.appendChild(img);
   overlay.onclick = () => overlay.remove();
   document.body.appendChild(overlay);
 }

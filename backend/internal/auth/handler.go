@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -73,7 +75,7 @@ func (h *Handler) Setup(w http.ResponseWriter, r *http.Request) {
 		req.Username, req.Email, string(hash), req.DisplayName,
 	).Scan(&userID)
 	if err != nil {
-		jsonError(w, "Could not create admin: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Could not create admin — username or email may already be in use", http.StatusInternalServerError)
 		return
 	}
 	h.db.Exec(ctx, "UPDATE setup_state SET completed=TRUE, completed_at=NOW() WHERE id=1")
@@ -121,7 +123,11 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Password must be at least 8 characters", http.StatusBadRequest)
 		return
 	}
-	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		jsonError(w, "Server error", http.StatusInternalServerError)
+		return
+	}
 
 	var userID string
 	err = h.db.QueryRow(ctx,
@@ -322,7 +328,11 @@ func (h *Handler) CheckInvite(w http.ResponseWriter, r *http.Request) {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 func (h *Handler) issueToken(userID string, isAdmin bool) (string, time.Time) {
-	expiresAt := time.Now().Add(168 * time.Hour) // 7 days
+	hours := 168 // 7 days default
+	if v, err := strconv.Atoi(os.Getenv("JWT_EXPIRY_HOURS")); err == nil && v > 0 {
+		hours = v
+	}
+	expiresAt := time.Now().Add(time.Duration(hours) * time.Hour)
 	claims := &Claims{
 		UserID:  userID,
 		IsAdmin: isAdmin,
@@ -361,12 +371,8 @@ func bearerToken(r *http.Request) string {
 }
 
 func hashToken(token string) string {
-	// Simple hash for session storage — not for password use
-	sum := 0
-	for _, c := range token {
-		sum += int(c)
-	}
-	return strconv.Itoa(sum) + token[len(token)-8:]
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
 }
 
 func jsonOK(w http.ResponseWriter, data any) {

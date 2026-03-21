@@ -1,10 +1,9 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
     container_name: warta_db
     restart: unless-stopped
+    env_file: .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-warta}
       POSTGRES_USER: ${POSTGRES_USER:-warta}
@@ -61,6 +60,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - uploads_data:/app/uploads:ro
     depends_on:
       - backend
       - frontend

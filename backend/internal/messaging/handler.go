@@ -3,6 +3,7 @@ package messaging
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -40,7 +41,12 @@ func newHub() *Hub {
 }
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true }, // nginx handles origin
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		allowed := os.Getenv("APP_BASE_URL")
+		// Allow if no origin header (non-browser clients) or matches configured base URL
+		return origin == "" || origin == allowed
+	},
 }
 
 func RegisterRoutes(mux *http.ServeMux, db *pgxpool.Pool, jwtSecret string) {
@@ -82,12 +88,24 @@ func (h *Handler) WebSocket(w http.ResponseWriter, r *http.Request) {
 		h.hub.mu.Unlock()
 	}()
 
-	// Keep connection alive, handle pings
+	// Keep connection alive with server-side pings
 	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	conn.SetPongHandler(func(string) error {
 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
+
+	// Ping ticker — ensures idle connections aren't dropped by proxies
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	go func() {
+		for range ticker.C {
+			if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(5*time.Second)); err != nil {
+				return
+			}
+		}
+	}()
+
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {

@@ -35,13 +35,18 @@ func main() {
 	}
 	defer pool.Close()
 
-	// Wait for DB
-	for i := 0; i < 10; i++ {
+	// Wait for DB with timeout
+	var dbReady bool
+	for i := 0; i < 15; i++ {
 		if err := pool.Ping(ctx); err == nil {
+			dbReady = true
 			break
 		}
 		log.Println("Waiting for database...")
 		time.Sleep(2 * time.Second)
+	}
+	if !dbReady {
+		log.Fatal("Could not connect to database after 30 seconds")
 	}
 	log.Println("Database connected")
 

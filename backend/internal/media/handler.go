@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -82,13 +81,21 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 
 	postID := r.FormValue("post_id")
 
-	// Detect MIME
+	// Detect MIME from file content (never trust client-supplied Content-Type)
 	buf := make([]byte, 512)
 	n, _ := file.Read(buf)
 	mimeType := http.DetectContentType(buf[:n])
-	// Also trust the header Content-Type for audio/video since DetectContentType is limited
-	if ct := header.Header.Get("Content-Type"); ct != "" {
-		mimeType = ct
+	// DetectContentType returns "application/octet-stream" for audio/video;
+	// fall back to extension-based detection for known media types
+	if mimeType == "application/octet-stream" {
+		ext := strings.ToLower(filepath.Ext(header.Filename))
+		extMIME := map[string]string{
+			".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".wav": "audio/wav",
+			".m4a": "audio/mp4", ".mp4": "video/mp4", ".webm": "video/webm",
+		}
+		if m, ok := extMIME[ext]; ok {
+			mimeType = m
+		}
 	}
 	// Strip params like "video/mp4; codecs=..."
 	if idx := strings.Index(mimeType, ";"); idx != -1 {
@@ -275,5 +282,3 @@ func jsonError(w http.ResponseWriter, msg string, code int) {
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-// Suppress unused import
-var _ = time.Now
