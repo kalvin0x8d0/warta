@@ -2,6 +2,8 @@
 
 Private invite-only social platform for family & trusted friends.
 
+<a href="https://www.aihonestybadge.com" target="_blank" rel="noopener"><img src="https://www.aihonestybadge.com/badges/ai-generated.svg" alt="AI Generated Badge" style="max-width: 190px; height: auto;" /></a>
+
 ## Stack
 - **Backend**: Go + pgx (PostgreSQL driver)
 - **Database**: PostgreSQL 16
