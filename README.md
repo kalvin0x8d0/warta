@@ -2,6 +2,8 @@
 
 Private invite-only social platform for family & trusted friends.
 
+<a href="http://creativecommons.org/publicdomain/zero/1.0/" title="CC0 1.0 Universal (CC0 1.0) Public Domain Dedication"><img src="https://licensebuttons.net/l/zero/1.0/80x15.png" width="80" height="15" alt="CC0 1.0 Universal (CC0 1.0) Public Domain Dedication"></a>
+
 <a href="https://www.aihonestybadge.com" target="_blank" rel="noopener"><img src="https://www.aihonestybadge.com/badges/ai-generated.svg" alt="AI Generated Badge" style="max-width: 190px; height: auto;" /></a>
 
 ## Stack
