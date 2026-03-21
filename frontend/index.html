@@ -6,52 +6,65 @@
 <title>Warta</title>
 <style>
   /* ── Fonts ── */
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500&display=swap');
 
   /* ── Design tokens ── */
   :root {
     --font-display: 'DM Serif Display', Georgia, serif;
     --font-body: 'DM Sans', system-ui, sans-serif;
-    --radius: 14px;
-    --radius-sm: 8px;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --radius: 16px;
+    --radius-sm: 10px;
     --radius-pill: 999px;
-    --shadow: 0 2px 12px rgba(0,0,0,.08);
-    --shadow-md: 0 4px 24px rgba(0,0,0,.12);
-    --transition: 160ms ease;
+    --shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.04), 0 12px 32px rgba(0,0,0,.1);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,.06), 0 24px 48px rgba(0,0,0,.12);
+    --transition: 180ms cubic-bezier(.4,0,.2,1);
+    --transition-slow: 300ms cubic-bezier(.4,0,.2,1);
   }
   [data-theme="light"] {
-    --bg: #F7F5F2;
+    --bg: #F8F6F3;
     --bg-card: #FFFFFF;
-    --bg-input: #EFEFED;
-    --bg-hover: #EBEBEA;
-    --bg-sidebar: #EFEDE9;
+    --bg-input: #F1EFEC;
+    --bg-hover: #ECEAE6;
+    --bg-sidebar: #F1EFEB;
+    --bg-code: #F5F3F0;
     --text: #1A1916;
     --text-2: #5C5954;
     --text-3: #9B9894;
     --accent: #C45C2E;
     --accent-2: #E8835A;
+    --accent-soft: rgba(196,92,46,.08);
     --accent-text: #FFFFFF;
-    --border: #E2DED9;
+    --border: #E6E2DD;
+    --border-strong: #D4CFC9;
     --green: #2E7D52;
     --red: #B83232;
     --blue: #2563EB;
+    --yellow: #D97706;
+    --purple: #7C3AED;
   }
   [data-theme="dark"] {
-    --bg: #141210;
-    --bg-card: #1E1C1A;
-    --bg-input: #2A2826;
-    --bg-hover: #252321;
-    --bg-sidebar: #181614;
+    --bg: #121110;
+    --bg-card: #1C1A18;
+    --bg-input: #262422;
+    --bg-hover: #222120;
+    --bg-sidebar: #161413;
+    --bg-code: #1E1C1A;
     --text: #F0EDE8;
     --text-2: #9E9B96;
     --text-3: #5E5C59;
     --accent: #E07046;
     --accent-2: #F59060;
+    --accent-soft: rgba(224,112,70,.1);
     --accent-text: #FFFFFF;
-    --border: #2E2C29;
+    --border: #2A2826;
+    --border-strong: #3A3836;
     --green: #4CAF7A;
     --red: #E05555;
     --blue: #60A5FA;
+    --yellow: #FBBF24;
+    --purple: #A78BFA;
   }
 
   /* ── Reset ── */
@@ -62,8 +75,10 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    transition: background var(--transition), color var(--transition);
+    transition: background var(--transition-slow), color var(--transition-slow);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   button { font-family: inherit; cursor: pointer; border: none; background: none; }
   input, textarea { font-family: inherit; }
@@ -79,33 +94,40 @@
     display: flex; flex-direction: column;
     position: sticky; top: 0; height: 100vh; overflow-y: auto;
     padding: 20px 12px;
-    gap: 4px;
+    gap: 2px;
   }
   .sidebar-logo {
     font-family: var(--font-display);
     font-size: 1.6rem;
     color: var(--accent);
-    padding: 8px 12px 16px;
+    padding: 8px 12px 20px;
     letter-spacing: -.02em;
   }
-  .sidebar-logo span { color: var(--text-3); font-size: .9rem; font-family: var(--font-body); font-style: italic; }
+  .sidebar-logo span { color: var(--text-3); font-size: .85rem; font-family: var(--font-body); font-style: italic; }
   .nav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px; border-radius: var(--radius-sm);
+    padding: 10px 14px; border-radius: var(--radius-sm);
     color: var(--text-2); font-size: .9rem; font-weight: 500;
     cursor: pointer; transition: all var(--transition);
     white-space: nowrap;
+    position: relative;
   }
   .nav-item:hover { background: var(--bg-hover); color: var(--text); }
-  .nav-item.active { background: var(--accent); color: white; }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .nav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0;
+  }
   .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
   .nav-spacer { flex: 1; }
 
   .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 24px; border-bottom: 1px solid var(--border);
-    background: var(--bg-card); position: sticky; top: 0; z-index: 10;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-card) 85%, transparent);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 10;
     gap: 12px;
   }
   .topbar-title { font-family: var(--font-display); font-size: 1.25rem; }
@@ -118,22 +140,23 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: border-color var(--transition);
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    box-shadow: var(--shadow);
   }
-  .card:hover { border-color: var(--text-3); }
+  .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
 
   /* ── Post composer ── */
   .composer { margin-bottom: 16px; }
   .composer textarea {
     width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px 14px;
+    border-radius: var(--radius-sm); padding: 14px 16px;
     color: var(--text); font-size: .95rem; resize: none;
-    transition: border-color var(--transition);
-    min-height: 80px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    min-height: 80px; line-height: 1.5;
   }
-  .composer textarea:focus { outline: none; border-color: var(--accent); }
+  .composer textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .composer-footer {
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 8px; gap: 8px;
@@ -145,19 +168,22 @@
   /* ── Buttons ── */
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 16px; border-radius: var(--radius-pill);
+    padding: 8px 18px; border-radius: var(--radius-pill);
     font-size: .875rem; font-weight: 500; cursor: pointer;
     transition: all var(--transition); border: none;
+    letter-spacing: .01em;
   }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: var(--accent-2); }
+  .btn-primary { background: var(--accent); color: white; box-shadow: 0 1px 3px rgba(196,92,46,.3); }
+  .btn-primary:hover { background: var(--accent-2); box-shadow: 0 2px 8px rgba(196,92,46,.35); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
   .btn-ghost {
     background: transparent; color: var(--text-2);
     border: 1px solid var(--border);
   }
-  .btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
-  .btn-sm { padding: 5px 12px; font-size: .8rem; }
+  .btn-ghost:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border-strong); }
+  .btn-sm { padding: 6px 14px; font-size: .8rem; }
   .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { opacity: .9; }
   .btn-icon {
     width: 34px; height: 34px; border-radius: var(--radius-pill);
     display: inline-flex; align-items: center; justify-content: center;
@@ -169,78 +195,193 @@
 
   /* ── Post ── */
   .post-header {
-    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;
   }
   .avatar {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--bg-input); display: flex; align-items: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg-input));
+    display: flex; align-items: center;
     justify-content: center; font-size: 1rem; flex-shrink: 0;
     object-fit: cover; overflow: hidden;
     border: 2px solid var(--border);
+    transition: border-color var(--transition);
   }
+  .card:hover .avatar { border-color: var(--accent); }
   .post-meta { flex: 1; min-width: 0; }
   .post-author { font-weight: 600; font-size: .9rem; }
   .post-username { color: var(--text-3); font-size: .8rem; }
   .post-time { color: var(--text-3); font-size: .78rem; }
-  .post-content { font-size: .95rem; line-height: 1.55; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+  .post-content { font-size: .95rem; line-height: 1.6; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
   .post-content.longform {
-    font-family: var(--font-display);
-    font-size: 1rem; line-height: 1.7;
+    font-size: 1rem; line-height: 1.75; white-space: normal;
   }
+  .post-content.md-rendered { white-space: normal; }
   .post-title {
     font-family: var(--font-display);
-    font-size: 1.2rem; margin-bottom: 8px; color: var(--text);
+    font-size: 1.25rem; margin-bottom: 10px; color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .post-type-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: .7rem; font-weight: 600; letter-spacing: .03em;
+    padding: 2px 8px; border-radius: var(--radius-pill);
+    background: var(--accent-soft); color: var(--accent);
+    text-transform: uppercase;
   }
   .post-actions {
     display: flex; align-items: center; gap: 2px;
-    padding-top: 8px; border-top: 1px solid var(--border);
+    padding-top: 10px; border-top: 1px solid var(--border);
   }
   .action-btn {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 5px 10px; border-radius: var(--radius-pill);
+    padding: 6px 12px; border-radius: var(--radius-pill);
     font-size: .82rem; color: var(--text-3);
     cursor: pointer; transition: all var(--transition);
     background: none; border: none; font-family: inherit;
   }
   .action-btn:hover { background: var(--bg-hover); color: var(--text); }
-  .action-btn.reacted { color: var(--accent); }
+  .action-btn.reacted { color: var(--accent); background: var(--accent-soft); }
   .action-btn .icon { font-size: .9rem; }
   .expand-btn {
     margin-left: auto;
-    font-size: .78rem; color: var(--text-3);
-    padding: 4px 10px; border-radius: var(--radius-pill);
-    cursor: pointer; background: var(--bg-input); border: none;
+    font-size: .78rem; color: var(--accent); font-weight: 500;
+    padding: 5px 12px; border-radius: var(--radius-pill);
+    cursor: pointer; background: var(--accent-soft); border: none;
     font-family: inherit; transition: all var(--transition);
   }
-  .expand-btn:hover { background: var(--bg-hover); color: var(--text); }
+  .expand-btn:hover { background: var(--accent); color: white; }
 
   /* ── Longform expansion ── */
   .longform-panel {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 2px solid var(--border);
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 2px solid var(--accent-soft);
     display: none;
+    animation: fadeSlideIn .3s ease;
   }
   .longform-panel.open { display: block; }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ── Markdown rendered content ── */
+  .md-rendered h1, .md-rendered h2, .md-rendered h3, .md-rendered h4 {
+    font-family: var(--font-display); color: var(--text);
+    margin: 1.2em 0 .5em; line-height: 1.3; letter-spacing: -.01em;
+  }
+  .md-rendered h1 { font-size: 1.5rem; }
+  .md-rendered h2 { font-size: 1.25rem; }
+  .md-rendered h3 { font-size: 1.1rem; }
+  .md-rendered h4 { font-size: 1rem; font-weight: 600; }
+  .md-rendered p { margin: .6em 0; }
+  .md-rendered strong { font-weight: 700; color: var(--text); }
+  .md-rendered em { font-style: italic; }
+  .md-rendered a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  .md-rendered a:hover { color: var(--accent-2); }
+  .md-rendered code {
+    font-family: var(--font-mono); font-size: .85em;
+    background: var(--bg-code); color: var(--accent);
+    padding: 2px 6px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .md-rendered pre {
+    margin: .8em 0; border-radius: var(--radius-sm);
+    background: var(--bg-code); border: 1px solid var(--border);
+    overflow-x: auto; position: relative;
+  }
+  .md-rendered pre code {
+    display: block; padding: 14px 16px;
+    background: none; border: none; color: var(--text);
+    font-size: .82rem; line-height: 1.6;
+  }
+  .md-rendered blockquote {
+    margin: .8em 0; padding: .5em 1em;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-2); font-style: italic;
+  }
+  .md-rendered blockquote p { margin: .25em 0; }
+  .md-rendered ul, .md-rendered ol {
+    margin: .6em 0; padding-left: 1.5em;
+  }
+  .md-rendered li { margin: .25em 0; line-height: 1.5; }
+  .md-rendered li::marker { color: var(--accent); }
+  .md-rendered hr {
+    border: none; height: 1px; background: var(--border);
+    margin: 1.2em 0;
+  }
+  .md-rendered img { max-width: 100%; border-radius: var(--radius-sm); margin: .5em 0; }
+  .md-rendered .task-item { list-style: none; margin-left: -1.5em; }
+  .md-rendered .task-item input { margin-right: .4em; accent-color: var(--accent); }
+
+  /* ── Markdown toolbar ── */
+  .md-toolbar {
+    display: flex; gap: 2px; padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-input); border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    flex-wrap: wrap; align-items: center;
+  }
+  .md-toolbar button {
+    width: 30px; height: 28px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .82rem; color: var(--text-2);
+    background: none; border: none; cursor: pointer;
+    transition: all var(--transition); font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  .md-toolbar button:hover { background: var(--bg-hover); color: var(--text); }
+  .md-toolbar .sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+  .md-toolbar .md-hint {
+    margin-left: auto; font-size: .72rem; color: var(--text-3);
+    font-family: var(--font-body); font-weight: 400;
+  }
+
+  /* ── Longform compose tabs ── */
+  .lf-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .lf-tab {
+    padding: 8px 16px; font-size: .85rem; font-weight: 500;
+    color: var(--text-3); cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; transition: all var(--transition);
+    font-family: inherit;
+  }
+  .lf-tab:hover { color: var(--text); }
+  .lf-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .lf-preview {
+    min-height: 200px; padding: 12px 0;
+    font-size: .95rem; line-height: 1.65;
+  }
+  .lf-preview-empty {
+    color: var(--text-3); font-style: italic; text-align: center; padding: 48px 16px;
+  }
 
   /* ── Comments ── */
-  .comments-section { margin-top: 12px; display: none; }
+  .comments-section {
+    margin-top: 12px; display: none;
+    animation: fadeSlideIn .25s ease;
+  }
   .comments-section.open { display: block; }
-  .comment-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .comment-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
   .comment-input-row input {
     flex: 1; background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: var(--radius-pill); padding: 8px 14px;
+    border-radius: var(--radius-pill); padding: 9px 16px;
     color: var(--text); font-size: .875rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
   }
-  .comment-input-row input:focus { outline: none; border-color: var(--accent); }
+  .comment-input-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .comment {
-    display: flex; gap: 8px; padding: 8px 0;
+    display: flex; gap: 10px; padding: 10px 0;
     border-bottom: 1px solid var(--border);
   }
   .comment:last-child { border-bottom: none; }
   .comment-body { flex: 1; }
   .comment-author { font-size: .82rem; font-weight: 600; }
-  .comment-text { font-size: .875rem; color: var(--text-2); line-height: 1.4; }
+  .comment-text { font-size: .875rem; color: var(--text-2); line-height: 1.5; }
+  .comment-text.md-rendered { white-space: normal; }
   .comment-time { font-size: .75rem; color: var(--text-3); }
 
   /* ── Media ── */
@@ -262,7 +403,8 @@
   }
   .auth-card {
     background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 32px; width: 100%; max-width: 400px;
+    border-radius: var(--radius); padding: 36px; width: 100%; max-width: 400px;
+    box-shadow: var(--shadow-lg);
   }
   .auth-logo {
     font-family: var(--font-display); font-size: 2rem;
@@ -273,11 +415,11 @@
   .field label { display: block; font-size: .82rem; font-weight: 500; margin-bottom: 5px; color: var(--text-2); }
   .field input, .field textarea, .field select {
     width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 9px 12px;
+    border-radius: var(--radius-sm); padding: 10px 14px;
     color: var(--text); font-size: .9rem;
-    transition: border-color var(--transition);
+    transition: border-color var(--transition), box-shadow var(--transition);
   }
-  .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .field-hint { font-size: .78rem; color: var(--text-3); margin-top: 4px; }
 
   /* ── Messages ── */
@@ -338,13 +480,16 @@
   }
   .toast {
     background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 10px 16px;
-    font-size: .875rem; box-shadow: var(--shadow-md);
-    animation: slideIn .2s ease; max-width: 320px;
+    border-radius: var(--radius-sm); padding: 12px 18px;
+    font-size: .875rem; box-shadow: var(--shadow-lg);
+    animation: toastIn .25s cubic-bezier(.4,0,.2,1); max-width: 340px;
   }
   .toast.error { border-left: 3px solid var(--red); }
   .toast.success { border-left: 3px solid var(--green); }
-  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes toastIn {
+    from { transform: translateY(8px) scale(.96); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
 
   /* ── Modal ── */
   .modal-overlay {
@@ -354,8 +499,14 @@
   }
   .modal {
     background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 24px;
-    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    border-radius: var(--radius); padding: 28px;
+    width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn .2s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes modalIn {
+    from { transform: scale(.96) translateY(8px); opacity: 0; }
+    to { transform: none; opacity: 1; }
   }
   .modal-title {
     font-family: var(--font-display); font-size: 1.2rem;
@@ -786,7 +937,7 @@ function renderFeed(main) {
             📎 Media
             <input type="file" id="media-file" style="display:none" accept="image/*,audio/*,video/*" onchange="handleMediaSelect(this)">
           </label>
-          <button class="btn btn-ghost btn-sm" onclick="openLongformModal()">📝 Long post</button>
+          <button class="btn btn-ghost btn-sm" onclick="openLongformModal()" title="Write a long-form post with Markdown support">📝 Long post</button>
           <button class="btn btn-primary btn-sm" onclick="submitPost()">Post</button>
         </div>
       </div>
@@ -829,11 +980,15 @@ function renderPost(post) {
       <div class="avatar">${post.avatar_path ? `<img src="${esc(post.avatar_path)}" alt="">` : '👤'}</div>
       <div class="post-meta">
         <div class="post-author">${esc(post.display_name || post.username)}</div>
-        <div class="post-username">@${esc(post.username)} · <span class="post-time">${relTime(post.created_at)}</span></div>
+        <div class="post-username">@${esc(post.username)} · <span class="post-time">${relTime(post.created_at)}</span>${
+          post.post_type === 'longform' ? ' · <span class="post-type-badge">long read</span>' : ''
+        }</div>
       </div>
     </div>
     ${post.title ? `<div class="post-title">${esc(post.title)}</div>` : ''}
-    <div class="post-content ${post.post_type === 'longform' ? 'longform' : ''}">${esc(post.content)}</div>
+    <div class="post-content ${post.post_type === 'longform' ? 'longform md-rendered' : ''}">${
+      post.post_type === 'longform' ? renderMarkdown(post.content) : esc(post.content)
+    }</div>
     ${mediaTags ? `<div class="post-media"><div class="media-grid ${(post.media||[]).length === 1 ? 'single' : ''}">${mediaTags}</div></div>` : ''}
     <div class="post-actions">
       <button class="action-btn ${post.user_reacted ? 'reacted' : ''}" onclick="toggleReact('${post.id}', this)">
@@ -893,7 +1048,7 @@ async function loadComments(postID) {
             <span class="comment-author">${esc(c.display_name || c.username)}</span>
             <span class="comment-time">${relTime(c.created_at)}</span>
           </div>
-          <div class="comment-text">${esc(c.content)}</div>
+          <div class="comment-text md-rendered">${renderInlineMarkdown(c.content)}</div>
         </div>
       </div>
     `).join('');
@@ -943,7 +1098,7 @@ async function loadLongform(postID, panel) {
     if (lf) {
       panel.innerHTML = `
         ${lf.title ? `<div class="post-title">${esc(lf.title)}</div>` : ''}
-        <div class="post-content longform">${esc(lf.content)}</div>`;
+        <div class="post-content longform md-rendered">${renderMarkdown(lf.content)}</div>`;
     } else {
       panel.innerHTML = `<div style="color:var(--text-3); font-size:.875rem">No expanded post yet.</div>`;
     }
@@ -1047,15 +1202,89 @@ async function handleMediaSelect(input) {
 
 function openLongformModal() {
   showModal(`
-    <div class="modal-title">✍️ Long-form post</div>
-    <div class="field"><label>Title (optional)</label><input type="text" id="lf-title"></div>
-    <div class="field"><label>Content</label>
-      <textarea id="lf-content" style="min-height:200px" placeholder="Write your post here…"></textarea></div>
+    <div class="modal-title">Long-form post</div>
+    <div class="field"><label>Title (optional)</label><input type="text" id="lf-title" placeholder="Give your post a title"></div>
+    <div class="lf-tabs">
+      <button class="lf-tab active" onclick="switchLfTab('write', this)">Write</button>
+      <button class="lf-tab" onclick="switchLfTab('preview', this)">Preview</button>
+    </div>
+    <div id="lf-write-panel">
+      <div class="md-toolbar">
+        <button title="Bold" onclick="mdInsert('**','**')"><b>B</b></button>
+        <button title="Italic" onclick="mdInsert('*','*')"><i>I</i></button>
+        <button title="Strikethrough" onclick="mdInsert('~~','~~')"><s>S</s></button>
+        <div class="sep"></div>
+        <button title="Heading" onclick="mdInsert('\\n## ','')">H</button>
+        <button title="Quote" onclick="mdInsert('\\n> ','')">&#8220;</button>
+        <button title="Code" onclick="mdInsert('\`','\`')">{ }</button>
+        <button title="Code block" onclick="mdInsert('\\n\`\`\`\\n','\\n\`\`\`')">&#9638;</button>
+        <div class="sep"></div>
+        <button title="Bullet list" onclick="mdInsert('\\n- ','')">&#8226;</button>
+        <button title="Numbered list" onclick="mdInsert('\\n1. ','')">1.</button>
+        <button title="Link" onclick="mdInsertLink()">#</button>
+        <button title="Horizontal rule" onclick="mdInsert('\\n---\\n','')">&#8212;</button>
+        <span class="md-hint">Markdown supported</span>
+      </div>
+      <textarea id="lf-content" style="min-height:240px;border-radius:0 0 var(--radius-sm) var(--radius-sm);border-top:none;font-family:var(--font-mono);font-size:.85rem;line-height:1.6" placeholder="Write your post using **markdown**…"></textarea>
+    </div>
+    <div id="lf-preview-panel" style="display:none">
+      <div class="lf-preview md-rendered" id="lf-preview-content">
+        <div class="lf-preview-empty">Start writing to see a preview</div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="submitLongform()">Publish</button>
     </div>
   `);
+}
+
+function switchLfTab(tab, btn) {
+  document.querySelectorAll('.lf-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const writePanel = document.getElementById('lf-write-panel');
+  const previewPanel = document.getElementById('lf-preview-panel');
+  if (tab === 'preview') {
+    writePanel.style.display = 'none';
+    previewPanel.style.display = 'block';
+    const content = document.getElementById('lf-content')?.value || '';
+    const previewEl = document.getElementById('lf-preview-content');
+    if (content.trim()) {
+      previewEl.innerHTML = renderMarkdown(content);
+    } else {
+      previewEl.innerHTML = '<div class="lf-preview-empty">Start writing to see a preview</div>';
+    }
+  } else {
+    writePanel.style.display = 'block';
+    previewPanel.style.display = 'none';
+  }
+}
+
+function mdInsert(before, after) {
+  const ta = document.getElementById('lf-content');
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const selected = ta.value.substring(start, end);
+  const b = before.replace(/\\n/g, '\n');
+  const a = after.replace(/\\n/g, '\n');
+  ta.value = ta.value.substring(0, start) + b + selected + a + ta.value.substring(end);
+  ta.focus();
+  ta.selectionStart = start + b.length;
+  ta.selectionEnd = start + b.length + selected.length;
+}
+
+function mdInsertLink() {
+  const url = prompt('Enter URL:', 'https://');
+  if (!url) return;
+  const ta = document.getElementById('lf-content');
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const selected = ta.value.substring(start, end) || 'link text';
+  const insert = `[${selected}](${url})`;
+  ta.value = ta.value.substring(0, start) + insert + ta.value.substring(end);
+  ta.focus();
 }
 
 async function submitLongform() {
@@ -1672,6 +1901,106 @@ function openMedia(url, type) {
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Markdown parser (XSS-safe: escapes first, then transforms) ──
+function renderMarkdown(raw) {
+  if (!raw) return '';
+  // Escape HTML first for safety
+  let text = esc(raw);
+
+  // Code blocks (``` ... ```)
+  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    return `<pre><code class="${lang}">${code.trim()}</code></pre>`;
+  });
+
+  // Inline code (` ... `)
+  text = text.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+
+  // Headings (must be at start of line)
+  text = text.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+  text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Horizontal rule
+  text = text.replace(/^(?:---|\*\*\*|___)\s*$/gm, '<hr>');
+
+  // Blockquotes
+  text = text.replace(/^&gt; (.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+  // Merge consecutive blockquotes
+  text = text.replace(/<\/blockquote>\n<blockquote>/g, '\n');
+
+  // Bold + italic
+  text = text.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  // Bold
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  // Italic
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  text = text.replace(/_(.+?)_/g, '<em>$1</em>');
+  // Strikethrough
+  text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+  // Links [text](url)
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+    // Only allow http/https links for security
+    if (/^https?:\/\//i.test(url)) {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+    return `[${label}](${url})`;
+  });
+
+  // Auto-link bare URLs
+  text = text.replace(/(?<!\")(?<!=)(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Task lists
+  text = text.replace(/^- \[x\] (.+)$/gm, '<li class="task-item"><input type="checkbox" checked disabled> $1</li>');
+  text = text.replace(/^- \[ \] (.+)$/gm, '<li class="task-item"><input type="checkbox" disabled> $1</li>');
+
+  // Unordered lists
+  text = text.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+  text = text.replace(/((?:<li(?:\s[^>]*)?>[\s\S]*?<\/li>\n?)+)/g, (match) => {
+    if (match.includes('task-item')) return `<ul style="list-style:none;padding-left:0">${match}</ul>`;
+    return `<ul>${match}</ul>`;
+  });
+
+  // Ordered lists
+  text = text.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  // Paragraphs: convert double newlines
+  text = text.replace(/\n{2,}/g, '</p><p>');
+  // Single newlines to <br> (but not inside pre/code blocks or after block elements)
+  text = text.replace(/(?<!<\/h[1-4]>|<\/blockquote>|<\/pre>|<\/ul>|<\/ol>|<hr>|<\/p>|<p>)\n(?!<h[1-4]|<blockquote|<pre|<ul|<ol|<hr|<\/|<li)/g, '<br>');
+
+  // Wrap in paragraph if not starting with a block element
+  if (!/^<(h[1-4]|pre|blockquote|ul|ol|hr)/.test(text)) {
+    text = '<p>' + text + '</p>';
+  }
+
+  // Clean up empty paragraphs
+  text = text.replace(/<p>\s*<\/p>/g, '');
+
+  return text;
+}
+
+// Render inline markdown only (for comments — no blocks)
+function renderInlineMarkdown(raw) {
+  if (!raw) return '';
+  let text = esc(raw);
+  text = text.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+  text = text.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+    if (/^https?:\/\//i.test(url)) {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+    return `[${label}](${url})`;
+  });
+  text = text.replace(/(?<!\")(?<!=)(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  return text;
 }
 
 // ── Hash routing ───────────────────────────────────────────
