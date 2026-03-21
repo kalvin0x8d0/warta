@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warta</title>
+<style>
+  /* ── Fonts ── */
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+  /* ── Design tokens ── */
+  :root {
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --radius-pill: 999px;
+    --shadow: 0 2px 12px rgba(0,0,0,.08);
+    --shadow-md: 0 4px 24px rgba(0,0,0,.12);
+    --transition: 160ms ease;
+  }
+  [data-theme="light"] {
+    --bg: #F7F5F2;
+    --bg-card: #FFFFFF;
+    --bg-input: #EFEFED;
+    --bg-hover: #EBEBEA;
+    --bg-sidebar: #EFEDE9;
+    --text: #1A1916;
+    --text-2: #5C5954;
+    --text-3: #9B9894;
+    --accent: #C45C2E;
+    --accent-2: #E8835A;
+    --accent-text: #FFFFFF;
+    --border: #E2DED9;
+    --green: #2E7D52;
+    --red: #B83232;
+    --blue: #2563EB;
+  }
+  [data-theme="dark"] {
+    --bg: #141210;
+    --bg-card: #1E1C1A;
+    --bg-input: #2A2826;
+    --bg-hover: #252321;
+    --bg-sidebar: #181614;
+    --text: #F0EDE8;
+    --text-2: #9E9B96;
+    --text-3: #5E5C59;
+    --accent: #E07046;
+    --accent-2: #F59060;
+    --accent-text: #FFFFFF;
+    --border: #2E2C29;
+    --green: #4CAF7A;
+    --red: #E05555;
+    --blue: #60A5FA;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  input, textarea { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; }
+
+  /* ── Layout ── */
+  #app { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 20px 12px;
+    gap: 4px;
+  }
+  .sidebar-logo {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--accent);
+    padding: 8px 12px 16px;
+    letter-spacing: -.02em;
+  }
+  .sidebar-logo span { color: var(--text-3); font-size: .9rem; font-family: var(--font-body); font-style: italic; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    color: var(--text-2); font-size: .9rem; font-weight: 500;
+    cursor: pointer; transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+  .nav-item.active { background: var(--accent); color: white; }
+  .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+  .nav-spacer { flex: 1; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; border-bottom: 1px solid var(--border);
+    background: var(--bg-card); position: sticky; top: 0; z-index: 10;
+    gap: 12px;
+  }
+  .topbar-title { font-family: var(--font-display); font-size: 1.25rem; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  .feed { max-width: 620px; margin: 0 auto; padding: 20px 16px; width: 100%; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color var(--transition);
+  }
+  .card:hover { border-color: var(--text-3); }
+
+  /* ── Post composer ── */
+  .composer { margin-bottom: 16px; }
+  .composer textarea {
+    width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    color: var(--text); font-size: .95rem; resize: none;
+    transition: border-color var(--transition);
+    min-height: 80px;
+  }
+  .composer textarea:focus { outline: none; border-color: var(--accent); }
+  .composer-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 8px; gap: 8px;
+  }
+  .char-count { font-size: .8rem; color: var(--text-3); }
+  .char-count.warn { color: var(--red); }
+  .composer-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: var(--radius-pill);
+    font-size: .875rem; font-weight: 500; cursor: pointer;
+    transition: all var(--transition); border: none;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-2); }
+  .btn-ghost {
+    background: transparent; color: var(--text-2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+  .btn-sm { padding: 5px 12px; font-size: .8rem; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-icon {
+    width: 34px; height: 34px; border-radius: var(--radius-pill);
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--text-2);
+    transition: all var(--transition); border: none; font-size: 1rem;
+    cursor: pointer;
+  }
+  .btn-icon:hover { background: var(--bg-hover); color: var(--text); }
+
+  /* ── Post ── */
+  .post-header {
+    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--bg-input); display: flex; align-items: center;
+    justify-content: center; font-size: 1rem; flex-shrink: 0;
+    object-fit: cover; overflow: hidden;
+    border: 2px solid var(--border);
+  }
+  .post-meta { flex: 1; min-width: 0; }
+  .post-author { font-weight: 600; font-size: .9rem; }
+  .post-username { color: var(--text-3); font-size: .8rem; }
+  .post-time { color: var(--text-3); font-size: .78rem; }
+  .post-content { font-size: .95rem; line-height: 1.55; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+  .post-content.longform {
+    font-family: var(--font-display);
+    font-size: 1rem; line-height: 1.7;
+  }
+  .post-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem; margin-bottom: 8px; color: var(--text);
+  }
+  .post-actions {
+    display: flex; align-items: center; gap: 2px;
+    padding-top: 8px; border-top: 1px solid var(--border);
+  }
+  .action-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: var(--radius-pill);
+    font-size: .82rem; color: var(--text-3);
+    cursor: pointer; transition: all var(--transition);
+    background: none; border: none; font-family: inherit;
+  }
+  .action-btn:hover { background: var(--bg-hover); color: var(--text); }
+  .action-btn.reacted { color: var(--accent); }
+  .action-btn .icon { font-size: .9rem; }
+  .expand-btn {
+    margin-left: auto;
+    font-size: .78rem; color: var(--text-3);
+    padding: 4px 10px; border-radius: var(--radius-pill);
+    cursor: pointer; background: var(--bg-input); border: none;
+    font-family: inherit; transition: all var(--transition);
+  }
+  .expand-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+  /* ── Longform expansion ── */
+  .longform-panel {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid var(--border);
+    display: none;
+  }
+  .longform-panel.open { display: block; }
+
+  /* ── Comments ── */
+  .comments-section { margin-top: 12px; display: none; }
+  .comments-section.open { display: block; }
+  .comment-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .comment-input-row input {
+    flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius-pill); padding: 8px 14px;
+    color: var(--text); font-size: .875rem;
+  }
+  .comment-input-row input:focus { outline: none; border-color: var(--accent); }
+  .comment {
+    display: flex; gap: 8px; padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .comment:last-child { border-bottom: none; }
+  .comment-body { flex: 1; }
+  .comment-author { font-size: .82rem; font-weight: 600; }
+  .comment-text { font-size: .875rem; color: var(--text-2); line-height: 1.4; }
+  .comment-time { font-size: .75rem; color: var(--text-3); }
+
+  /* ── Media ── */
+  .post-media { margin: 8px 0; border-radius: var(--radius-sm); overflow: hidden; }
+  .post-media img { width: 100%; max-height: 480px; object-fit: cover; }
+  .post-media audio, .post-media video { width: 100%; }
+  .media-grid {
+    display: grid; gap: 4px;
+    grid-template-columns: repeat(2, 1fr);
+    border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .media-grid img { width: 100%; height: 200px; object-fit: cover; cursor: pointer; }
+  .media-grid.single img { height: auto; max-height: 480px; }
+
+  /* ── Forms / Auth ── */
+  .auth-wrap {
+    min-height: 100vh; display: flex; align-items: center;
+    justify-content: center; padding: 24px;
+  }
+  .auth-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px; width: 100%; max-width: 400px;
+  }
+  .auth-logo {
+    font-family: var(--font-display); font-size: 2rem;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .auth-sub { color: var(--text-3); font-size: .875rem; margin-bottom: 24px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: .82rem; font-weight: 500; margin-bottom: 5px; color: var(--text-2); }
+  .field input, .field textarea, .field select {
+    width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 9px 12px;
+    color: var(--text); font-size: .9rem;
+    transition: border-color var(--transition);
+  }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+  .field-hint { font-size: .78rem; color: var(--text-3); margin-top: 4px; }
+
+  /* ── Messages ── */
+  .messages-layout { display: flex; height: calc(100vh - 57px); }
+  .convo-list { width: 260px; flex-shrink: 0; border-right: 1px solid var(--border); overflow-y: auto; }
+  .convo-item {
+    display: flex; gap: 10px; padding: 12px 14px;
+    cursor: pointer; border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+  .convo-item:hover { background: var(--bg-hover); }
+  .convo-item.active { background: var(--bg-input); }
+  .convo-name { font-weight: 500; font-size: .9rem; }
+  .convo-preview { font-size: .8rem; color: var(--text-3); }
+  .unread-badge {
+    background: var(--accent); color: white;
+    font-size: .7rem; font-weight: 700;
+    padding: 2px 6px; border-radius: var(--radius-pill);
+    margin-left: auto; align-self: center;
+  }
+  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .message-bubble {
+    max-width: 70%; padding: 9px 13px;
+    border-radius: var(--radius); font-size: .9rem; line-height: 1.45;
+  }
+  .message-bubble.mine {
+    background: var(--accent); color: white;
+    align-self: flex-end; border-bottom-right-radius: 4px;
+  }
+  .message-bubble.theirs {
+    background: var(--bg-input); color: var(--text);
+    align-self: flex-start; border-bottom-left-radius: 4px;
+  }
+  .message-bubble.decrypting { opacity: 0.6; font-style: italic; }
+  .chat-input-row {
+    display: flex; gap: 8px; padding: 12px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .chat-input-row input {
+    flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius-pill); padding: 9px 14px;
+    color: var(--text); font-size: .9rem;
+  }
+  .chat-input-row input:focus { outline: none; border-color: var(--accent); }
+  .e2ee-notice {
+    text-align: center; font-size: .75rem; color: var(--text-3);
+    padding: 6px; border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Toast ── */
+  #toasts {
+    position: fixed; bottom: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 9999;
+  }
+  .toast {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 16px;
+    font-size: .875rem; box-shadow: var(--shadow-md);
+    animation: slideIn .2s ease; max-width: 320px;
+  }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.success { border-left: 3px solid var(--green); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 16px; backdrop-filter: blur(2px);
+  }
+  .modal {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title {
+    font-family: var(--font-display); font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  /* ── Quota bar ── */
+  .quota-bar { background: var(--bg-input); border-radius: var(--radius-pill); height: 6px; margin: 4px 0; overflow: hidden; }
+  .quota-fill { height: 100%; background: var(--accent); border-radius: var(--radius-pill); transition: width .4s; }
+  .quota-fill.warn { background: var(--red); }
+
+  /* ── Upload area ── */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius-sm);
+    padding: 16px; text-align: center; cursor: pointer;
+    transition: border-color var(--transition); color: var(--text-3);
+    font-size: .875rem;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); color: var(--text); }
+
+  /* ── Mod ── */
+  .vote-bar { display: flex; gap: 4px; align-items: center; font-size: .78rem; color: var(--text-3); }
+  .vote-remove { color: var(--red); font-weight: 600; }
+  .vote-keep { color: var(--green); font-weight: 600; }
+
+  /* ── Admin panel ── */
+  .admin-section { margin-bottom: 24px; }
+  .admin-section h3 { font-family: var(--font-display); font-size: 1rem; margin-bottom: 10px; color: var(--text-2); }
+  .user-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); margin-bottom: 6px;
+    background: var(--bg-card);
+  }
+  .user-row .username { font-weight: 500; }
+  .user-row .email { font-size: .8rem; color: var(--text-3); }
+  .user-row.disabled { opacity: .5; }
+  .badge {
+    font-size: .7rem; padding: 2px 7px; border-radius: var(--radius-pill);
+    font-weight: 600;
+  }
+  .badge-admin { background: var(--accent); color: white; }
+  .badge-disabled { background: var(--red); color: white; }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    width: 42px; height: 24px; border-radius: var(--radius-pill);
+    background: var(--bg-input); border: 1px solid var(--border);
+    position: relative; cursor: pointer; transition: background var(--transition);
+    display: inline-flex; align-items: center;
+  }
+  .theme-toggle-knob {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--text); position: absolute; left: 3px;
+    transition: transform var(--transition);
+  }
+  [data-theme="dark"] .theme-toggle-knob { transform: translateX(18px); }
+
+  /* ── Profile page ── */
+  .profile-header {
+    padding: 24px; border-bottom: 1px solid var(--border);
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .profile-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 3px solid var(--border); object-fit: cover; font-size: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-input);
+  }
+
+  /* ── Invite ── */
+  .invite-code {
+    font-family: monospace; font-size: .9rem;
+    background: var(--bg-input); padding: 6px 12px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    word-break: break-all;
+  }
+  .invite-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); margin-bottom: 6px;
+    font-size: .875rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .sidebar { width: 56px; padding: 12px 8px; }
+    .sidebar-logo, .nav-item span, .sidebar .nav-label { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .feed { padding: 12px 8px; }
+    .topbar { padding: 10px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toasts"></div>
+<div id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const API = '/api';
+const state = {
+  user: null,
+  token: null,
+  page: 'feed',
+  posts: [],
+  comments: {},
+  users: [],
+  messages: {},
+  conversations: [],
+  activeConvo: null,
+  invites: [],
+  adminUsers: [],
+  modQueue: [],
+  quotaInfo: null,
+  ws: null,
+  privateKey: null, // E2EE
+  publicKey: null,
+};
+
+// ── Theme ──────────────────────────────────────────────────
+function applyTheme(pref) {
+  if (pref === 'auto') {
+    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  } else {
+    document.documentElement.dataset.theme = pref;
+  }
+  localStorage.setItem('theme', pref);
+}
+function toggleTheme() {
+  const cur = document.documentElement.dataset.theme;
+  const next = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  if (state.user) {
+    apiFetch('PUT', '/users/me', { theme_pref: next });
+  }
+}
+const savedTheme = localStorage.getItem('theme') || 'auto';
+applyTheme(savedTheme);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if ((localStorage.getItem('theme') || 'auto') === 'auto') applyTheme('auto');
+});
+
+// ── Auth state ─────────────────────────────────────────────
+function loadAuth() {
+  const t = sessionStorage.getItem('token') || localStorage.getItem('token');
+  const u = sessionStorage.getItem('user') || localStorage.getItem('user');
+  if (t && u) {
+    state.token = t;
+    state.user = JSON.parse(u);
+    return true;
+  }
+  return false;
+}
+function saveAuth(token, user, remember) {
+  state.token = token;
+  state.user = user;
+  const storage = remember ? localStorage : sessionStorage;
+  storage.setItem('token', token);
+  storage.setItem('user', JSON.stringify(user));
+}
+function clearAuth() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('token'); localStorage.removeItem('user');
+  sessionStorage.removeItem('token'); sessionStorage.removeItem('user');
+}
+
+// ── API helper ─────────────────────────────────────────────
+async function apiFetch(method, path, body, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  try {
+    const res = await fetch(API + path, {
+      method, headers,
+      body: body ? JSON.stringify(body) : undefined,
+      ...opts,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  } catch (e) {
+    throw e;
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── Time helpers ───────────────────────────────────────────
+function relTime(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return new Date(iso).toLocaleDateString();
+}
+
+// ── Emoji with fallback ────────────────────────────────────
+function icon(emoji, fallback) {
+  // We trust emoji support but provide fallback text
+  return `<span role="img" aria-label="">${emoji}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// E2EE — Web Crypto ECDH + AES-GCM
+// ═══════════════════════════════════════════════════════════
+async function generateKeyPair() {
+  const kp = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']
+  );
+  const pub = await crypto.subtle.exportKey('spki', kp.publicKey);
+  const priv = await crypto.subtle.exportKey('pkcs8', kp.privateKey);
+  return {
+    publicKey: kp.publicKey,
+    privateKey: kp.privateKey,
+    publicKeyB64: btoa(String.fromCharCode(...new Uint8Array(pub))),
+    privateKeyB64: btoa(String.fromCharCode(...new Uint8Array(priv))),
+  };
+}
+async function importPublicKey(b64) {
+  const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('spki', raw, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+}
+async function importPrivateKey(b64) {
+  const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('pkcs8', raw, { name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveKey']);
+}
+async function deriveAESKey(privateKey, publicKey) {
+  return crypto.subtle.deriveKey(
+    { name: 'ECDH', public: publicKey },
+    privateKey,
+    { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+async function encryptMessage(plaintext, recipientPubKeyB64) {
+  const ephemeral = await generateKeyPair();
+  const recipientPub = await importPublicKey(recipientPubKeyB64);
+  const sharedKey = await deriveAESKey(ephemeral.privateKey, recipientPub);
+  const nonce = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: nonce },
+    sharedKey,
+    new TextEncoder().encode(plaintext)
+  );
+  return {
+    ciphertext: btoa(String.fromCharCode(...new Uint8Array(ct))),
+    ephemeral_pubkey: ephemeral.publicKeyB64,
+    nonce: btoa(String.fromCharCode(...nonce)),
+  };
+}
+async function decryptMessage(ciphertext, ephemeralPubKeyB64, nonceB64, myPrivateKey) {
+  try {
+    const ephemeralPub = await importPublicKey(ephemeralPubKeyB64);
+    const sharedKey = await deriveAESKey(myPrivateKey, ephemeralPub);
+    const nonce = Uint8Array.from(atob(nonceB64), c => c.charCodeAt(0));
+    const ct = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, sharedKey, ct);
+    return new TextDecoder().decode(pt);
+  } catch {
+    return '[Cannot decrypt — message was encrypted for a different key]';
+  }
+}
+async function loadOrCreateKeyPair() {
+  const storedPriv = localStorage.getItem('e2ee_priv');
+  if (storedPriv) {
+    state.privateKey = await importPrivateKey(storedPriv);
+    return;
+  }
+  const kp = await generateKeyPair();
+  state.privateKey = kp.privateKey;
+  state.publicKey = kp.publicKey;
+  localStorage.setItem('e2ee_priv', kp.privateKeyB64);
+  // Register public key with server
+  if (state.token) {
+    apiFetch('PUT', '/users/me/pubkey', { public_key: kp.publicKeyB64 }).catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function render() {
+  const app = document.getElementById('app');
+  if (!state.token) {
+    renderAuth(app);
+    return;
+  }
+  // Check setup
+  const path = location.hash.replace('#', '') || '/';
+  if (path.startsWith('/join/')) {
+    state.pendingInvite = path.split('/join/')[1];
+    renderAuth(app, 'register');
+    return;
+  }
+  renderShell(app);
+}
+
+function renderShell(app) {
+  const pages = [
+    { id: 'feed', label: 'Feed', emoji: '🏠', fallback: '⌂' },
+    { id: 'messages', label: 'Messages', emoji: '💬', fallback: '✉' },
+    { id: 'invites', label: 'Invites', emoji: '🔗', fallback: '#' },
+    { id: 'profile', label: 'Profile', emoji: '👤', fallback: '○' },
+    ...(state.user?.is_admin ? [{ id: 'admin', label: 'Admin', emoji: '⚙️', fallback: '✦' }] : []),
+  ];
+
+  app.innerHTML = `
+  <nav class="sidebar">
+    <div class="sidebar-logo">Warta<br><span>just us</span></div>
+    ${pages.map(p => `
+      <div class="nav-item ${state.page === p.id ? 'active' : ''}" onclick="navigate('${p.id}')">
+        <span class="icon">${p.emoji}</span>
+        <span class="nav-label">${p.label}</span>
+      </div>
+    `).join('')}
+    <div class="nav-spacer"></div>
+    <div style="padding: 8px 12px; display:flex; align-items:center; gap:8px;">
+      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <div class="theme-toggle-knob"></div>
+      </div>
+      <span style="font-size:.78rem; color:var(--text-3);" class="nav-label">Theme</span>
+    </div>
+    <div class="nav-item" onclick="doLogout()" style="color:var(--red)">
+      <span class="icon">🚪</span>
+      <span class="nav-label">Logout</span>
+    </div>
+  </nav>
+  <div class="main" id="main-content"></div>
+  `;
+  renderPage();
+}
+
+function renderPage() {
+  const main = document.getElementById('main-content');
+  if (!main) return;
+  switch (state.page) {
+    case 'feed': renderFeed(main); break;
+    case 'messages': renderMessages(main); break;
+    case 'invites': renderInvites(main); break;
+    case 'profile': renderProfile(main); break;
+    case 'admin': renderAdmin(main); break;
+    default: renderFeed(main);
+  }
+}
+
+function navigate(page) {
+  state.page = page;
+  renderPage();
+  // Update active nav
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.textContent.trim().toLowerCase().includes(page.toLowerCase()));
+  });
+}
+
+// ── Auth screens ───────────────────────────────────────────
+function renderAuth(app, mode) {
+  const isRegister = mode === 'register' || location.hash.includes('register');
+  app.innerHTML = `
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">Warta</div>
+      <div class="auth-sub">${isRegister ? 'Create your account' : 'Welcome back'}</div>
+      ${isRegister ? renderRegisterForm() : renderLoginForm()}
+    </div>
+  </div>`;
+}
+function renderLoginForm() {
+  return `
+  <div class="field"><label>Username or email</label>
+    <input type="text" id="login-input" placeholder="username or email" autocomplete="username"></div>
+  <div class="field"><label>Password</label>
+    <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+  <button class="btn btn-primary" style="width:100%" onclick="doLogin()">
+    Sign in 🔑
+  </button>
+  <p style="text-align:center; margin-top:14px; font-size:.85rem; color:var(--text-3)">
+    Have an invite? <a href="#register" onclick="render()" style="color:var(--accent)">Register</a>
+  </p>`;
+}
+function renderRegisterForm() {
+  return `
+  <div class="field"><label>Invite code</label>
+    <input type="text" id="reg-invite" placeholder="paste invite code" value="${state.pendingInvite || ''}"></div>
+  <div class="field"><label>Username</label>
+    <input type="text" id="reg-username" placeholder="yourname" autocomplete="username"></div>
+  <div class="field"><label>Display name</label>
+    <input type="text" id="reg-display" placeholder="Your Name"></div>
+  <div class="field"><label>Email</label>
+    <input type="email" id="reg-email" placeholder="you@email.com" autocomplete="email"></div>
+  <div class="field"><label>Password</label>
+    <input type="password" id="reg-pass" placeholder="at least 8 characters" autocomplete="new-password">
+    <div class="field-hint">Minimum 8 characters</div></div>
+  <button class="btn btn-primary" style="width:100%" onclick="doRegister()">
+    Create account ✨
+  </button>
+  <p style="text-align:center; margin-top:14px; font-size:.85rem; color:var(--text-3)">
+    Already have an account? <a href="#" onclick="location.hash=''; render()" style="color:var(--accent)">Sign in</a>
+  </p>`;
+}
+
+// ── Feed ───────────────────────────────────────────────────
+function renderFeed(main) {
+  main.innerHTML = `
+  <div class="topbar">
+    <span class="topbar-title">Feed</span>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="loadFeed()">↻ Refresh</button>
+    </div>
+  </div>
+  <div class="feed">
+    <div class="card composer">
+      <textarea id="post-content" placeholder="What's on your mind?" maxlength="280" oninput="updateCharCount(this)"></textarea>
+      <div class="composer-footer">
+        <span class="char-count" id="char-count">280</span>
+        <div class="composer-actions">
+          <label class="btn btn-ghost btn-sm" title="Attach media">
+            📎 Media
+            <input type="file" id="media-file" style="display:none" accept="image/*,audio/*,video/*" onchange="handleMediaSelect(this)">
+          </label>
+          <button class="btn btn-ghost btn-sm" onclick="openLongformModal()">📝 Long post</button>
+          <button class="btn btn-primary btn-sm" onclick="submitPost()">Post</button>
+        </div>
+      </div>
+      <div id="media-preview" style="margin-top:8px"></div>
+    </div>
+    <div id="feed-posts"><div style="color:var(--text-3); text-align:center; padding:32px">Loading feed... ⏳</div></div>
+  </div>`;
+  loadFeed();
+}
+
+async function loadFeed() {
+  try {
+    const data = await apiFetch('GET', '/posts');
+    const posts = data.posts || [];
+    state.posts = posts;
+    const container = document.getElementById('feed-posts');
+    if (!container) return;
+    if (!posts.length) {
+      container.innerHTML = `<div style="color:var(--text-3); text-align:center; padding:32px">No posts yet. Be the first! 🌱</div>`;
+      return;
+    }
+    container.innerHTML = posts.map(renderPost).join('');
+  } catch (e) {
+    toast('Could not load feed: ' + e.message, 'error');
+  }
+}
+
+function renderPost(post) {
+  const hasLongform = post.post_type === 'longform' || post.has_longform;
+  const mediaTags = (post.media || []).map(m => {
+    if (m.media_type === 'image') return `<img src="${m.url}" alt="" onclick="openMedia('${m.url}', 'image')" style="cursor:pointer">`;
+    if (m.media_type === 'audio') return `<audio controls src="${m.url}"></audio>`;
+    if (m.media_type === 'video') return `<video controls src="${m.url}" style="max-height:300px"></video>`;
+    return '';
+  }).join('');
+
+  return `
+  <div class="card" id="post-${post.id}">
+    <div class="post-header">
+      <div class="avatar">${post.avatar_path ? `<img src="${post.avatar_path}" alt="">` : '👤'}</div>
+      <div class="post-meta">
+        <div class="post-author">${esc(post.display_name || post.username)}</div>
+        <div class="post-username">@${esc(post.username)} · <span class="post-time">${relTime(post.created_at)}</span></div>
+      </div>
+    </div>
+    ${post.title ? `<div class="post-title">${esc(post.title)}</div>` : ''}
+    <div class="post-content ${post.post_type === 'longform' ? 'longform' : ''}">${esc(post.content)}</div>
+    ${mediaTags ? `<div class="post-media"><div class="media-grid ${(post.media||[]).length === 1 ? 'single' : ''}">${mediaTags}</div></div>` : ''}
+    <div class="post-actions">
+      <button class="action-btn ${post.user_reacted ? 'reacted' : ''}" onclick="toggleReact('${post.id}', this)">
+        <span class="icon">👍</span> <span class="react-count">${post.reaction_count || 0}</span>
+      </button>
+      <button class="action-btn" onclick="toggleComments('${post.id}')">
+        <span class="icon">💬</span> ${post.comment_count || 0}
+      </button>
+      <button class="action-btn" onclick="openModVoteModal('${post.id}', 'post')">
+        <span class="icon">🚩</span>
+      </button>
+      ${state.user?.is_admin ? `
+        <button class="action-btn" style="color:var(--red)" onclick="adminRemove('post', '${post.id}')">
+          <span class="icon">🗑️</span>
+        </button>` : ''}
+      ${post.author_id === state.user?.id ? `
+        <button class="action-btn" style="color:var(--red)" onclick="deletePost('${post.id}')">
+          <span class="icon">✕</span>
+        </button>` : ''}
+      ${hasLongform ? `<button class="expand-btn" onclick="toggleLongform('${post.id}')">Read more ↓</button>` : ''}
+    </div>
+    <div class="comments-section" id="comments-${post.id}">
+      <div class="comment-input-row">
+        <input type="text" placeholder="Write a comment…" id="comment-input-${post.id}"
+          onkeydown="if(event.key==='Enter') addComment('${post.id}')">
+        <button class="btn btn-primary btn-sm" onclick="addComment('${post.id}')">Send</button>
+      </div>
+      <div id="comment-list-${post.id}"></div>
+    </div>
+    <div class="longform-panel" id="longform-${post.id}"></div>
+  </div>`;
+}
+
+function toggleComments(postID) {
+  const section = document.getElementById('comments-' + postID);
+  const isOpen = section.classList.toggle('open');
+  if (isOpen && !section.dataset.loaded) {
+    loadComments(postID);
+    section.dataset.loaded = '1';
+  }
+}
+
+async function loadComments(postID) {
+  try {
+    const comments = await apiFetch('GET', '/posts/' + postID + '/comments');
+    const list = document.getElementById('comment-list-' + postID);
+    if (!list) return;
+    if (!comments.length) {
+      list.innerHTML = `<div style="font-size:.82rem; color:var(--text-3); padding:4px 0">No comments yet.</div>`;
+      return;
+    }
+    list.innerHTML = comments.map(c => `
+      <div class="comment">
+        <div class="avatar" style="width:28px;height:28px;font-size:.7rem">👤</div>
+        <div class="comment-body">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="comment-author">${esc(c.display_name || c.username)}</span>
+            <span class="comment-time">${relTime(c.created_at)}</span>
+          </div>
+          <div class="comment-text">${esc(c.content)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    toast('Could not load comments', 'error');
+  }
+}
+
+async function addComment(postID) {
+  const input = document.getElementById('comment-input-' + postID);
+  const content = input?.value?.trim();
+  if (!content) return;
+  try {
+    await apiFetch('POST', '/posts/' + postID + '/comments', { content });
+    input.value = '';
+    loadComments(postID);
+    // Update comment count
+    const postEl = document.getElementById('post-' + postID);
+    if (postEl) {
+      const countEl = postEl.querySelector('.action-btn:nth-child(2)');
+      // simple reload approach
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function toggleLongform(postID) {
+  const panel = document.getElementById('longform-' + postID);
+  const btn = panel.previousElementSibling.querySelector('.expand-btn');
+  if (panel.classList.toggle('open')) {
+    btn.textContent = 'Show less ↑';
+    loadLongform(postID, panel);
+  } else {
+    btn.textContent = 'Read more ↓';
+  }
+}
+
+async function loadLongform(postID, panel) {
+  if (panel.dataset.loaded) return;
+  panel.dataset.loaded = '1';
+  try {
+    // Find longform child post
+    const data = await apiFetch('GET', '/posts?parent=' + postID + '&type=longform');
+    const lf = (data.posts || [])[0];
+    if (lf) {
+      panel.innerHTML = `
+        ${lf.title ? `<div class="post-title">${esc(lf.title)}</div>` : ''}
+        <div class="post-content longform">${esc(lf.content)}</div>`;
+    } else {
+      panel.innerHTML = `<div style="color:var(--text-3); font-size:.875rem">No expanded post yet.</div>`;
+    }
+  } catch { panel.innerHTML = '...'; }
+}
+
+async function toggleReact(postID, btn) {
+  try {
+    const res = await apiFetch('POST', '/posts/' + postID + '/react');
+    btn.classList.toggle('reacted', res.reacted);
+    const count = btn.querySelector('.react-count');
+    if (count) count.textContent = parseInt(count.textContent) + (res.reacted ? 1 : -1);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function deletePost(postID) {
+  if (!confirm('Delete this post?')) return;
+  try {
+    await apiFetch('DELETE', '/posts/' + postID);
+    document.getElementById('post-' + postID)?.remove();
+    toast('Post deleted', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function submitPost() {
+  const content = document.getElementById('post-content')?.value?.trim();
+  if (!content) return;
+  try {
+    const post = { post_type: 'micro', content };
+    // Media attachment
+    if (state.pendingMediaID) {
+      post.media_id = state.pendingMediaID;
+    }
+    await apiFetch('POST', '/posts', post);
+    document.getElementById('post-content').value = '';
+    document.getElementById('char-count').textContent = '280';
+    document.getElementById('media-preview').innerHTML = '';
+    state.pendingMediaID = null;
+    toast('Posted! 🎉', 'success');
+    await loadFeed();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function updateCharCount(el) {
+  const remaining = 280 - el.value.length;
+  const counter = document.getElementById('char-count');
+  if (counter) {
+    counter.textContent = remaining;
+    counter.classList.toggle('warn', remaining < 20);
+  }
+}
+
+async function handleMediaSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('media-preview');
+
+  // Compression reminder
+  const type = file.type.split('/')[0];
+  const hints = {
+    image: '📸 Tip: Compress images first using Squoosh (squoosh.app) or TinyPNG to save your storage.',
+    video: '🎬 Tip: Compress video first using HandBrake before uploading. Your 1 GB quota will thank you.',
+    audio: '🎵 Tip: Compress audio first. MP3 at 128kbps is usually good quality and small.',
+  };
+  if (hints[type]) {
+    preview.innerHTML = `<div style="font-size:.78rem;color:var(--text-3);padding:6px 0">${hints[type]}</div>`;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    preview.innerHTML += `<div style="font-size:.8rem;color:var(--text-3)">Uploading… ⏳</div>`;
+    const headers = {};
+    if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+    const res = await fetch(API + '/media/upload', { method: 'POST', headers, body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    state.pendingMediaID = data.id;
+    const usedPct = data.quota?.used_pct || '0%';
+    preview.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;font-size:.8rem;margin-top:4px">
+        <span style="color:var(--green)">✓ Ready to attach</span>
+        <span style="color:var(--text-3)">Storage: ${usedPct}</span>
+        <button class="btn btn-ghost btn-sm" onclick="state.pendingMediaID=null; this.parentNode.parentNode.innerHTML=''">✕</button>
+      </div>`;
+    if (data.compression_hint) {
+      preview.innerHTML += `<div style="font-size:.75rem;color:var(--text-3);margin-top:2px">${data.compression_hint}</div>`;
+    }
+    toast('Media uploaded ✓', 'success');
+  } catch (e) {
+    preview.innerHTML = `<div style="color:var(--red);font-size:.8rem">${e.message}</div>`;
+  }
+}
+
+function openLongformModal() {
+  showModal(`
+    <div class="modal-title">✍️ Long-form post</div>
+    <div class="field"><label>Title (optional)</label><input type="text" id="lf-title"></div>
+    <div class="field"><label>Content</label>
+      <textarea id="lf-content" style="min-height:200px" placeholder="Write your post here…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitLongform()">Publish</button>
+    </div>
+  `);
+}
+
+async function submitLongform() {
+  const title = document.getElementById('lf-title')?.value?.trim();
+  const content = document.getElementById('lf-content')?.value?.trim();
+  if (!content) return toast('Content cannot be empty', 'error');
+  try {
+    await apiFetch('POST', '/posts', { post_type: 'longform', title, content });
+    closeModal();
+    toast('Long post published 📝', 'success');
+    loadFeed();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── Messages ───────────────────────────────────────────────
+function renderMessages(main) {
+  main.innerHTML = `
+  <div class="topbar">
+    <span class="topbar-title">Messages 🔒</span>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openNewMessage()">+ New</button>
+    </div>
+  </div>
+  <div class="messages-layout">
+    <div class="convo-list" id="convo-list">
+      <div style="color:var(--text-3);text-align:center;padding:24px;font-size:.875rem">Loading…</div>
+    </div>
+    <div class="chat-area" id="chat-area">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3)">
+        Select a conversation 💬
+      </div>
+    </div>
+  </div>`;
+  loadConversations();
+  ensureWebSocket();
+}
+
+async function loadConversations() {
+  try {
+    const convos = await apiFetch('GET', '/messages');
+    state.conversations = convos;
+    const list = document.getElementById('convo-list');
+    if (!list) return;
+    if (!convos.length) {
+      list.innerHTML = `<div style="color:var(--text-3);text-align:center;padding:24px;font-size:.82rem">No messages yet.<br>Start a conversation!</div>`;
+      return;
+    }
+    list.innerHTML = convos.map(c => `
+      <div class="convo-item ${state.activeConvo === c.other_user_id ? 'active' : ''}" 
+           onclick="openConversation('${c.other_user_id}', '${esc(c.display_name || c.username)}')">
+        <div class="avatar">👤</div>
+        <div style="flex:1;min-width:0">
+          <div class="convo-name">${esc(c.display_name || c.username)}</div>
+          <div class="convo-preview">Tap to view 🔒</div>
+        </div>
+        ${c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : ''}
+      </div>
+    `).join('');
+  } catch (e) {
+    toast('Could not load conversations', 'error');
+  }
+}
+
+async function openConversation(userID, displayName) {
+  state.activeConvo = userID;
+  const chatArea = document.getElementById('chat-area');
+  if (!chatArea) return;
+  chatArea.innerHTML = `
+    <div class="e2ee-notice">🔒 End-to-end encrypted · Safety first: if you lose your account, message history cannot be recovered</div>
+    <div class="chat-messages" id="chat-messages">
+      <div style="text-align:center;color:var(--text-3);font-size:.82rem">Decrypting messages…</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" placeholder="Type a message… (encrypted)" id="chat-input"
+        onkeydown="if(event.key==='Enter') sendMessage('${userID}')">
+      <button class="btn btn-primary" onclick="sendMessage('${userID}')">Send 🔒</button>
+    </div>`;
+
+  await ensurePrivateKey();
+
+  try {
+    const data = await apiFetch('GET', '/messages/' + userID);
+    const msgs = data.messages || [];
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    if (!msgs.length) {
+      container.innerHTML = `<div style="text-align:center;color:var(--text-3);font-size:.82rem">No messages yet. Say hello! 👋</div>`;
+      return;
+    }
+    const rendered = await Promise.all(msgs.map(async m => {
+      const isMine = m.sender_id === state.user.id;
+      let text = '…';
+      if (state.privateKey) {
+        text = await decryptMessage(m.ciphertext, m.ephemeral_pubkey, m.nonce, state.privateKey);
+      }
+      return `<div class="message-bubble ${isMine ? 'mine' : 'theirs'}">
+        ${esc(text)}
+        <div style="font-size:.7rem;opacity:.6;margin-top:3px;text-align:${isMine?'right':'left'}">${relTime(m.created_at)}</div>
+      </div>`;
+    }));
+    container.innerHTML = rendered.join('');
+    container.scrollTop = container.scrollHeight;
+  } catch (e) {
+    toast('Could not load messages: ' + e.message, 'error');
+  }
+}
+
+async function sendMessage(recipientID) {
+  const input = document.getElementById('chat-input');
+  const text = input?.value?.trim();
+  if (!text) return;
+
+  await ensurePrivateKey();
+
+  try {
+    // Get recipient's public key
+    const keyData = await apiFetch('GET', '/users/' + recipientID + '/pubkey');
+    if (!keyData.public_key) {
+      toast('Recipient has not set up E2EE yet. Ask them to log in again.', 'error');
+      return;
+    }
+    const encrypted = await encryptMessage(text, keyData.public_key);
+    await apiFetch('POST', '/messages/' + recipientID, encrypted);
+    input.value = '';
+    // Append optimistically
+    const container = document.getElementById('chat-messages');
+    if (container) {
+      container.innerHTML += `<div class="message-bubble mine">
+        ${esc(text)}
+        <div style="font-size:.7rem;opacity:.6;margin-top:3px;text-align:right">just now</div>
+      </div>`;
+      container.scrollTop = container.scrollHeight;
+    }
+  } catch (e) {
+    toast('Send failed: ' + e.message, 'error');
+  }
+}
+
+async function ensurePrivateKey() {
+  if (!state.privateKey) await loadOrCreateKeyPair();
+}
+
+function openNewMessage() {
+  loadUsers().then(users => {
+    showModal(`
+      <div class="modal-title">New message 💬</div>
+      <div class="field"><label>To</label>
+        <select id="msg-to">
+          <option value="">Select person…</option>
+          ${users.filter(u => u.id !== state.user.id).map(u =>
+            `<option value="${u.id}">${esc(u.display_name || u.username)}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="startConvo()">Open</button>
+      </div>
+    `);
+  });
+}
+
+function startConvo() {
+  const userID = document.getElementById('msg-to')?.value;
+  if (!userID) return;
+  closeModal();
+  state.activeConvo = userID;
+  renderMessages(document.getElementById('main-content'));
+  openConversation(userID, '');
+}
+
+function ensureWebSocket() {
+  if (state.ws) return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${proto}//${location.host}/ws?token=${state.token}`);
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'new_message') {
+      toast('New message 💬', 'info');
+      if (state.page === 'messages') loadConversations();
+    }
+  };
+  ws.onclose = () => { state.ws = null; };
+  state.ws = ws;
+}
+
+// ── Invites ────────────────────────────────────────────────
+function renderInvites(main) {
+  main.innerHTML = `
+  <div class="topbar">
+    <span class="topbar-title">Invites 🔗</span>
+    <div class="topbar-actions">
+      <button class="btn btn-primary btn-sm" onclick="createInvite()">+ Create invite</button>
+    </div>
+  </div>
+  <div class="feed">
+    <div id="invites-list"><div style="color:var(--text-3);text-align:center;padding:24px">Loading…</div></div>
+  </div>`;
+  loadInvites();
+}
+
+async function loadInvites() {
+  try {
+    const invites = await apiFetch('GET', '/invites');
+    state.invites = invites || [];
+    const list = document.getElementById('invites-list');
+    if (!list) return;
+    if (!state.invites.length) {
+      list.innerHTML = `<div style="color:var(--text-3);text-align:center;padding:32px">No invites yet. Create one to invite a friend!</div>`;
+      return;
+    }
+    list.innerHTML = state.invites.map(inv => {
+      const url = `${location.origin}/join/${inv.code}`;
+      const expired = inv.expires_at && new Date(inv.expires_at) < new Date();
+      const active = inv.is_active && !expired && inv.use_count < inv.max_uses;
+      return `
+      <div class="card invite-row">
+        <div style="flex:1;min-width:0">
+          <div class="invite-code">${inv.code}</div>
+          <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+            Used ${inv.use_count}/${inv.max_uses} ·
+            ${inv.expires_at ? 'Expires ' + relTime(inv.expires_at) : 'No expiry'} ·
+            Created by ${esc(inv.created_by)}
+            ${active ? '<span style="color:var(--green)"> · Active</span>' : '<span style="color:var(--red)"> · Inactive</span>'}
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="copyInvite('${url}')">📋 Copy</button>
+        ${active ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="revokeInvite('${inv.code}')">Revoke</button>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    toast('Could not load invites: ' + e.message, 'error');
+  }
+}
+
+async function createInvite() {
+  try {
+    const inv = await apiFetch('POST', '/invites', {});
+    toast('Invite created! Code: ' + inv.code, 'success');
+    copyInvite(inv.invite_url);
+    loadInvites();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function revokeInvite(code) {
+  if (!confirm('Revoke this invite?')) return;
+  try {
+    await apiFetch('DELETE', '/invites/' + code);
+    toast('Invite revoked', 'success');
+    loadInvites();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function copyInvite(url) {
+  navigator.clipboard.writeText(url).then(() => toast('Invite link copied! 📋', 'success')).catch(() => {
+    prompt('Copy this invite link:', url);
+  });
+}
+
+// ── Profile ────────────────────────────────────────────────
+function renderProfile(main) {
+  const user = state.user;
+  main.innerHTML = `
+  <div class="topbar">
+    <span class="topbar-title">Profile</span>
+  </div>
+  <div class="feed">
+    <div class="card">
+      <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.2rem">${esc(user.display_name || user.username)}</div>
+          <div style="color:var(--text-3);font-size:.875rem">@${esc(user.username)}</div>
+          ${user.bio ? `<div style="margin-top:6px;font-size:.9rem">${esc(user.bio)}</div>` : ''}
+          ${user.is_admin ? `<span class="badge badge-admin" style="margin-top:8px;display:inline-block">Admin ⚙️</span>` : ''}
+        </div>
+      </div>
+      <div style="padding:16px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:.82rem;color:var(--text-3);margin-bottom:4px">Storage</div>
+          <div class="quota-bar">
+            <div class="quota-fill ${(user.storage_used_bytes/user.storage_limit_bytes)>.8?'warn':''}" 
+                 style="width:${Math.min(100,Math.round(user.storage_used_bytes/user.storage_limit_bytes*100))}%"></div>
+          </div>
+          <div style="font-size:.78rem;color:var(--text-3);margin-top:2px">
+            ${formatBytes(user.storage_used_bytes)} used of ${formatBytes(user.storage_limit_bytes)}
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openEditProfile()">✏️ Edit profile</button>
+        <button class="btn btn-ghost btn-sm" onclick="openChangePassword()">🔑 Change password</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function formatBytes(b) {
+  if (!b) return '0 B';
+  const k = 1024;
+  const sizes = ['B','KB','MB','GB'];
+  const i = Math.floor(Math.log(b)/Math.log(k));
+  return (b/Math.pow(k,i)).toFixed(1) + ' ' + sizes[i];
+}
+
+function openEditProfile() {
+  const u = state.user;
+  showModal(`
+    <div class="modal-title">Edit profile</div>
+    <div class="field"><label>Display name</label><input type="text" id="edit-display" value="${esc(u.display_name || '')}"></div>
+    <div class="field"><label>Bio</label><textarea id="edit-bio" style="min-height:80px">${esc(u.bio || '')}</textarea></div>
+    <div class="field"><label>Theme</label>
+      <select id="edit-theme">
+        <option value="auto" ${u.theme_pref==='auto'?'selected':''}>Auto (follow browser)</option>
+        <option value="light" ${u.theme_pref==='light'?'selected':''}>Light</option>
+        <option value="dark" ${u.theme_pref==='dark'?'selected':''}>Dark</option>
+      </select></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+    </div>
+  `);
+}
+
+async function saveProfile() {
+  const displayName = document.getElementById('edit-display')?.value;
+  const bio = document.getElementById('edit-bio')?.value;
+  const theme = document.getElementById('edit-theme')?.value;
+  try {
+    await apiFetch('PUT', '/users/me', { display_name: displayName, bio, theme_pref: theme });
+    state.user.display_name = displayName;
+    state.user.bio = bio;
+    state.user.theme_pref = theme;
+    localStorage.setItem('user', JSON.stringify(state.user));
+    applyTheme(theme);
+    closeModal();
+    toast('Profile updated ✓', 'success');
+    renderProfile(document.getElementById('main-content'));
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function openChangePassword() {
+  showModal(`
+    <div class="modal-title">Change password 🔑</div>
+    <div class="field"><label>Current password</label><input type="password" id="cp-current"></div>
+    <div class="field"><label>New password</label><input type="password" id="cp-new"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePassword()">Change</button>
+    </div>
+  `);
+}
+
+async function savePassword() {
+  const cur = document.getElementById('cp-current')?.value;
+  const next = document.getElementById('cp-new')?.value;
+  if (!cur || !next) return toast('Fill in both fields', 'error');
+  try {
+    await apiFetch('PUT', '/users/me/password', { current_password: cur, new_password: next });
+    closeModal();
+    toast('Password changed. Please log in again.', 'success');
+    doLogout();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── Admin ──────────────────────────────────────────────────
+function renderAdmin(main) {
+  main.innerHTML = `
+  <div class="topbar">
+    <span class="topbar-title">Admin ⚙️</span>
+  </div>
+  <div class="feed">
+    <div class="card admin-section">
+      <h3>Users</h3>
+      <div id="admin-users">Loading…</div>
+    </div>
+    <div class="card admin-section">
+      <h3>Moderation queue</h3>
+      <div id="mod-queue">Loading…</div>
+    </div>
+  </div>`;
+  loadAdminUsers();
+  loadModQueue();
+}
+
+async function loadAdminUsers() {
+  try {
+    const users = await apiFetch('GET', '/admin/users');
+    const el = document.getElementById('admin-users');
+    if (!el) return;
+    el.innerHTML = users.map(u => `
+      <div class="user-row ${!u.is_active?'disabled':''}">
+        <div>
+          <div class="username">${esc(u.username)}
+            ${u.is_admin ? '<span class="badge badge-admin">Admin</span>' : ''}
+            ${!u.is_active ? '<span class="badge badge-disabled">Disabled</span>' : ''}
+          </div>
+          <div class="email">${esc(u.email)}</div>
+          <div style="font-size:.75rem;color:var(--text-3)">
+            Storage: ${formatBytes(u.storage_used_bytes)} / ${formatBytes(u.storage_limit_bytes)}
+          </div>
+        </div>
+        ${!u.is_admin ? `
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="toggleUserActive('${u.id}', ${u.is_active})">
+              ${u.is_active ? 'Disable' : 'Enable'}
+            </button>
+          </div>` : ''}
+      </div>
+    `).join('');
+  } catch (e) {
+    toast('Could not load users', 'error');
+  }
+}
+
+async function toggleUserActive(userID, isActive) {
+  try {
+    await apiFetch('POST', '/mod/admin/user/disable', { user_id: userID, disable: isActive });
+    toast(isActive ? 'User disabled' : 'User enabled', 'success');
+    loadAdminUsers();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function loadModQueue() {
+  try {
+    const queue = await apiFetch('GET', '/mod/queue');
+    const el = document.getElementById('mod-queue');
+    if (!el) return;
+    if (!queue.length) {
+      el.innerHTML = `<div style="color:var(--text-3);font-size:.875rem">No reports pending. ✓</div>`;
+      return;
+    }
+    el.innerHTML = queue.map(q => `
+      <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:6px">
+        <div style="font-size:.82rem;color:var(--text-2)">${q.target_type} · ${q.target_id}</div>
+        <div class="vote-bar">
+          <span class="vote-remove">🚩 ${q.remove_votes} remove</span>
+          <span style="margin:0 4px">·</span>
+          <span class="vote-keep">✓ ${q.keep_votes} keep</span>
+          <span style="margin:0 4px">·</span>
+          <span>${relTime(q.last_vote)}</span>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button class="btn btn-danger btn-sm" onclick="adminRemove('${q.target_type}', '${q.target_id}')">Remove now 🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="adminRestore('${q.target_type}', '${q.target_id}')">Restore ✓</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    toast('Could not load mod queue', 'error');
+  }
+}
+
+async function adminRemove(type, id) {
+  const reason = prompt('Reason for removal (optional):', 'Removed by admin');
+  try {
+    await apiFetch('POST', '/mod/admin/remove', { target_type: type, target_id: id, reason: reason || 'Admin removal' });
+    toast('Removed ✓', 'success');
+    if (type === 'post') document.getElementById('post-' + id)?.remove();
+    loadModQueue();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function adminRestore(type, id) {
+  try {
+    await apiFetch('POST', '/mod/admin/restore', { target_type: type, target_id: id });
+    toast('Restored ✓', 'success');
+    loadModQueue();
+    loadFeed();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function openModVoteModal(targetID, targetType) {
+  showModal(`
+    <div class="modal-title">🚩 Report content</div>
+    <p style="font-size:.875rem;color:var(--text-2);margin-bottom:14px">
+      Community moderation: 2/3 majority of votes removes this content. Admins can also remove it directly.
+    </p>
+    <div class="field"><label>Reason (optional)</label><input type="text" id="mod-reason" placeholder="e.g. spam, inappropriate"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-ghost" onclick="castVote('${targetID}','${targetType}','keep')">✓ Keep</button>
+      <button class="btn btn-danger" onclick="castVote('${targetID}','${targetType}','remove')">🚩 Remove</button>
+    </div>
+  `);
+}
+
+async function castVote(id, type, vote) {
+  const reason = document.getElementById('mod-reason')?.value || '';
+  try {
+    const res = await apiFetch('POST', '/mod/vote', { target_type: type, target_id: id, vote, reason });
+    closeModal();
+    if (res.auto_removed) {
+      toast('Content removed by community vote ✓', 'success');
+      if (type === 'post') document.getElementById('post-' + id)?.remove();
+    } else {
+      toast(`Vote recorded. ${res.remove_votes} remove, ${res.keep_votes} keep.`, 'success');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── Auth actions ───────────────────────────────────────────
+async function doLogin() {
+  const login = document.getElementById('login-input')?.value?.trim();
+  const pass = document.getElementById('login-pass')?.value;
+  if (!login || !pass) return toast('Fill in all fields', 'error');
+  try {
+    const data = await apiFetch('POST', '/auth/login', { login, password: pass });
+    // Fetch full user profile
+    const headers = { 'Authorization': 'Bearer ' + data.token, 'Content-Type': 'application/json' };
+    const profileRes = await fetch(API + '/users/me', { headers });
+    const profile = await profileRes.json();
+    saveAuth(data.token, profile, true);
+    applyTheme(profile.theme_pref || 'auto');
+    await loadOrCreateKeyPair();
+    state.page = 'feed';
+    render();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function doRegister() {
+  const invite = document.getElementById('reg-invite')?.value?.trim();
+  const username = document.getElementById('reg-username')?.value?.trim();
+  const display = document.getElementById('reg-display')?.value?.trim();
+  const email = document.getElementById('reg-email')?.value?.trim();
+  const pass = document.getElementById('reg-pass')?.value;
+  if (!invite || !username || !email || !pass) return toast('Fill in all fields', 'error');
+
+  // Generate E2EE keypair before registering
+  const kp = await generateKeyPair();
+  localStorage.setItem('e2ee_priv', kp.privateKeyB64);
+  state.privateKey = kp.privateKey;
+
+  try {
+    const data = await apiFetch('POST', '/auth/register', {
+      invite_code: invite, username, display_name: display || username,
+      email, password: pass, public_key: kp.publicKeyB64,
+    });
+    const profileRes = await fetch(API + '/users/me', {
+      headers: { 'Authorization': 'Bearer ' + data.token, 'Content-Type': 'application/json' }
+    });
+    const profile = await profileRes.json();
+    saveAuth(data.token, profile, true);
+    state.pendingInvite = null;
+    state.page = 'feed';
+    render();
+    toast('Welcome to Warta! 🎉', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function doLogout() {
+  try { await apiFetch('POST', '/auth/logout'); } catch {}
+  clearAuth();
+  state.ws?.close();
+  state.ws = null;
+  state.page = 'feed';
+  render();
+}
+
+// ── Users cache ────────────────────────────────────────────
+async function loadUsers() {
+  if (state.users.length) return state.users;
+  state.users = await apiFetch('GET', '/users');
+  return state.users;
+}
+
+// ── Modal ──────────────────────────────────────────────────
+function showModal(html) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.body.appendChild(overlay);
+}
+function closeModal() {
+  document.getElementById('modal-overlay')?.remove();
+}
+
+// ── Media viewer ───────────────────────────────────────────
+function openMedia(url, type) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cursor = 'zoom-out';
+  overlay.innerHTML = `<img src="${url}" style="max-width:90vw;max-height:90vh;border-radius:var(--radius);object-fit:contain">`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+// ── Escape ─────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Hash routing ───────────────────────────────────────────
+window.addEventListener('hashchange', () => {
+  const hash = location.hash.replace('#', '');
+  if (hash.startsWith('/join/')) {
+    state.pendingInvite = hash.split('/join/')[1];
+    renderAuth(document.getElementById('app'), 'register');
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────
+async function init() {
+  if (loadAuth()) {
+    await loadOrCreateKeyPair();
+    render();
+  } else {
+    render();
+  }
+}
+init();
+</script>
+</body>
+</html>
