@@ -6,7 +6,7 @@ Private invite-only social platform for family & trusted friends.
 - **Backend**: Go + pgx (PostgreSQL driver)
 - **Database**: PostgreSQL 16
 - **Frontend**: Vanilla HTML/CSS/JS (no build step needed)
-- **Reverse proxy**: YunoHost nginx → internal nginx → services
+- **Reverse proxy**: nginx container exposed on host port 50982
 - **Deployment**: Docker Compose
 
 ---
@@ -15,7 +15,6 @@ Private invite-only social platform for family & trusted friends.
 
 ### 1. Prerequisites
 - Docker + Docker Compose installed on your VPS
-- YunoHost configured with a domain pointing to your VPS
 
 ### 2. Configure environment
 ```bash
@@ -28,28 +27,15 @@ Fill in:
 - `APP_BASE_URL` — your full domain, e.g. `https://warta.yourdomain.com`
 - `ADMIN_EMAIL` — your email
 
-### 3. YunoHost network
-Make sure YunoHost's nginx proxy network exists:
-```bash
-docker network create yunohost_network 2>/dev/null || true
-```
-Add to your YunoHost nginx config (`/etc/nginx/conf.d/yourdomain.conf`):
-```nginx
-location / {
-    proxy_pass http://warta_nginx:80;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Real-IP $remote_addr;
-}
-```
-
-### 4. Start
+### 3. Start
 ```bash
 docker compose up -d
 docker compose logs -f
 ```
 
-### 5. First-time admin setup
+The app will be accessible at `http://your-server:50982`.
+
+### 4. First-time admin setup
 Once running, create your admin account (one-time only):
 ```bash
 curl -X POST https://yourdomain.com/api/setup \
@@ -63,7 +49,7 @@ curl -X POST https://yourdomain.com/api/setup \
 ```
 After this, the `/api/setup` endpoint is permanently disabled.
 
-### 6. Invite people
+### 5. Invite people
 Log in at `https://yourdomain.com`, go to Invites, create an invite link, and share it with family/friends.
 
 ---
