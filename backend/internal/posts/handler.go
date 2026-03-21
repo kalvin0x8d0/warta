@@ -88,7 +88,6 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 
 	var feed []PostItem
 	var postIDs []string
-	postMap := map[string]*PostItem{}
 
 	for rows.Next() {
 		var p PostItem
@@ -125,7 +124,6 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 			var size int64
 			var dur, w, h *int
 			mediaRows.Scan(&postID, &id, &mt, &fn, &sp, &mime, &size, &dur, &w, &h)
-			_ = postMap
 			for i := range feed {
 				if feed[i].ID == postID {
 					feed[i].Media = append(feed[i].Media, MediaItem{
@@ -248,7 +246,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	reason := "Deleted by " 
+	reason := "Deleted by "
 	if claims.IsAdmin {
 		reason += "admin"
 	} else {
